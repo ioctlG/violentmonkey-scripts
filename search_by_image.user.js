@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         ⚡ Search by Image
-// @namespace    https://violentmonkey.github.io/
-// @version      3.9.7
+// @namespace    https://github.com/ioctlG/violentmonkey-scripts
+// @version      3.9.8
 // @description  A sleek, pinned, draggable reverse image search panel featuring official options menu, engine toggling, reordering, all 46 service profile icons/SVGs, in-page element selection, raw image extraction, screen capture cropping, local file browsing with paste support, and direct URL input across Google Lens, Yandex, Lenso.ai, Pinterest, Bing, TinEye, trace.moe, SauceNAO, and 40+ engines. All tabs open in the background without stealing focus. Intelligent viewport boundary protection and full Pinterest visual search gallery feed.
-// @author       Antigravity
+// @author       ioctlG
 // @icon         https://raw.githubusercontent.com/dessant/search-by-image/main/src/assets/icons/app/icon.svg
 // @downloadURL  https://github.com/ioctlG/violentmonkey-scripts/raw/refs/heads/main/search_by_image.user.js
 // @updateURL    https://github.com/ioctlG/violentmonkey-scripts/raw/refs/heads/main/search_by_image.user.js
