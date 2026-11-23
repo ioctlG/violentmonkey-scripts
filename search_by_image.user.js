@@ -1,10 +1,12 @@
 // ==UserScript==
 // @name         ⚡ Search by Image
 // @namespace    https://violentmonkey.github.io/
-// @version      3.9.3
+// @version      3.9.7
 // @description  A sleek, pinned, draggable reverse image search panel featuring official options menu, engine toggling, reordering, all 46 service profile icons/SVGs, in-page element selection, raw image extraction, screen capture cropping, local file browsing with paste support, and direct URL input across Google Lens, Yandex, Lenso.ai, Pinterest, Bing, TinEye, trace.moe, SauceNAO, and 40+ engines. All tabs open in the background without stealing focus. Intelligent viewport boundary protection and full Pinterest visual search gallery feed.
 // @author       Antigravity
 // @icon         https://raw.githubusercontent.com/dessant/search-by-image/main/src/assets/icons/app/icon.svg
+// @downloadURL  https://github.com/ioctlG/violentmonkey-scripts/raw/refs/heads/main/search_by_image.user.js
+// @updateURL    https://github.com/ioctlG/violentmonkey-scripts/raw/refs/heads/main/search_by_image.user.js
 // @match        *://*/*
 // @grant        GM_registerMenuCommand
 // @grant        GM_openInTab
@@ -111,6 +113,17 @@
       modeBrowseStatus: "Mode: File Browse — Click an engine below to pick an image file",
       modeCaptureStatus: "Mode: Capture — Drag any box across the screen to crop (ESC to cancel)",
       areaTooSmall: "Area too small, crop cancelled.",
+      croppingAndSearching: "Cropping and searching...",
+      noImageUnderCursor: "No valid image element under cursor.",
+      extractingAndSearching: "Extracting image & searching...",
+      failedToExtract: "Failed to extract image data.",
+      loadingFile: "Loading local file & searching...",
+      clipboardImagePasted: "Image pasted from clipboard! Searching...",
+      clipboardUrlPasted: "Image URL pasted! Searching...",
+      clipboardEmpty: "No image or image link found in clipboard.",
+      clipboardDenied: "Clipboard permission denied or not supported.",
+      switchModeTitle: "Switch Mode (Click)",
+      recropBtn: "✂️ Crop Again",
 
       // Options Modal Sections
       secEngines: "Search Engines",
@@ -169,7 +182,7 @@
 
       // Mode banners & hints
       allSearchEngines: "Tüm arama motorları",
-      clickImageToSearch: "Aramak için sayfadaki herhangi bir görsele tıklayın (İptal için ESC)",
+      clickImageToSearch: "Aramak için sayfadaki herhangi bir görsele tıklayın (Kapatmak için ESC)",
       urlInputPlaceholder: "Görsel URL adresini buraya yapıştırıp Enter'a basın...",
       browseBtn: "📁 Görsel Seç",
       pasteBtn: "📋 Panodan Yapıştır",
@@ -193,6 +206,17 @@
       modeBrowseStatus: "Mod: Dosya Yükleme — Alttaki bir motora tıklayarak dosya seçin",
       modeCaptureStatus: "Mod: Kırpma — Kırpmak için ekranda bir kutu sürükleyin (İptal için ESC)",
       areaTooSmall: "Alan çok küçük, kırpma iptal edildi.",
+      croppingAndSearching: "Kırpılıyor ve aranıyor...",
+      noImageUnderCursor: "İmleç altında geçerli bir görsel bulunamadı.",
+      extractingAndSearching: "Görsel alınıyor ve aranıyor...",
+      failedToExtract: "Görsel verisi alınamadı.",
+      loadingFile: "Yerel dosya yükleniyor ve aranıyor...",
+      clipboardImagePasted: "Görsel panodan yapıştırıldı! Aranıyor...",
+      clipboardUrlPasted: "Görsel bağlantısı yapıştırıldı! Aranıyor...",
+      clipboardEmpty: "Panoda görsel veya bağlantı bulunamadı.",
+      clipboardDenied: "Pano izni reddedildi veya desteklenmiyor.",
+      switchModeTitle: "Mod Değiştir (Tıkla)",
+      recropBtn: "✂️ Tekrar Kırp",
 
       // Options Modal Sections
       secEngines: "Arama Motorları",
@@ -265,7 +289,7 @@
 
   // --- DEFAULT OPTIONS ---
   const DEFAULT_OPTIONS = {
-    lang: 'en',
+    lang: 'tr', // Varsayılan Türkçe
     tabFocus: 'background',
     uploadProvider: 'clipboard', // Default is Clipboard (Ctrl+C / Ctrl+V Zero Upload)
     defaultEngine: 'googleLens',
@@ -307,9 +331,9 @@
       console.warn('[Search by Image] Load options error:', e);
     }
 
-    // Language and Tab Focus defaults
-    if (currentOptions.lang !== 'tr') {
-      currentOptions.lang = 'en';
+    // Language and Tab Focus defaults (Default to Turkish if not explicitly set to English)
+    if (currentOptions.lang !== 'en') {
+      currentOptions.lang = 'tr';
     }
     if (currentOptions.tabFocus !== 'foreground') {
       currentOptions.tabFocus = 'background';
@@ -535,7 +559,7 @@
       openTab(`https://${host}/images/search?rpt=imageview&url=${encodeURIComponent(url)}`);
     },
     pinterest: async (url, fileData) => {
-      showTopStatus('🔍 Searching Pinterest Visual Matches...', 3500);
+      showTopStatus(currentOptions.lang === 'tr' ? '🔍 Pinterest Görsel Eşleşmeleri Aranıyor...' : '🔍 Searching Pinterest Visual Matches...', 3500);
       try {
         let blob = null;
         if (fileData) {
@@ -574,7 +598,7 @@
                     const bestTitle = realPins.find(p => p.title && p.title.trim())?.title ||
                                       realPins.find(p => p.description && p.description.trim())?.description || '';
                     openPinterestResultsPage(url || fileData || '', realPins, bestTitle);
-                    showTopStatus(`✅ Found ${realPins.length} Pinterest visual matches (Background Tab)!`, 2500);
+                    showTopStatus(currentOptions.lang === 'tr' ? `✅ ${realPins.length} Pinterest görsel eşleşmesi bulundu (Arka Plan Sekmesi)!` : `✅ Found ${realPins.length} Pinterest visual matches (Background Tab)!`, 2500);
                     return;
                   }
                 }
@@ -740,7 +764,7 @@
   function executeGenericEngine(engineId, url, fileData) {
     const engineInfo = ALL_ENGINES.find(e => e.id === engineId);
     const engineName = engineInfo?.name || engineId;
-    showTopStatus(`🔍 Searching with ${engineName}...`, 2000);
+    showTopStatus(`🔍 ${t('searchingEngine', { name: engineName })}`, 2000);
 
     if (ENGINE_ACTIONS[engineId]) {
       ENGINE_ACTIONS[engineId](url, fileData);
@@ -878,13 +902,13 @@
                         currentTarget?.element?.closest('[title]')?.getAttribute('title') || '';
 
     if (contextText && contextText.trim().length > 2 && !contextText.startsWith('http')) {
-      showTopStatus(`🔍 Searching Pinterest for "${contextText.slice(0, 25)}..."`, 2500);
+      showTopStatus(currentOptions.lang === 'tr' ? `🔍 Pinterest\'te "${contextText.slice(0, 25)}..." aranıyor` : `🔍 Searching Pinterest for "${contextText.slice(0, 25)}..."`, 2500);
       openTab(`https://www.pinterest.com/search/pins/?q=${encodeURIComponent(contextText.trim())}`);
       return;
     }
 
     if (url && !url.startsWith('data:')) {
-      showTopStatus('🔍 Searching Pinterest Visual Matches via Bing...', 2500);
+      showTopStatus(currentOptions.lang === 'tr' ? '🔍 Bing üzerinden Pinterest görsel eşleşmeleri aranıyor...' : '🔍 Searching Pinterest Visual Matches via Bing...', 2500);
       openTab(`https://www.bing.com/images/search?view=detailv2&iss=sbi&FORM=SBIHMP&sbisrc=UrlPaste&q=site:pinterest.com&imgurl=${encodeURIComponent(url)}`);
       return;
     }
@@ -1085,14 +1109,16 @@
     if (isCaptureMode) stopCaptureMode();
 
     const chosenEngine = engineKey || pendingEngine || currentOptions.defaultEngine || 'googleLens';
-    pendingEngine = chosenEngine;
+    if (isMenuVisible || engineKey) {
+      pendingEngine = chosenEngine;
+    }
     selectionTargetType = targetType;
 
     ensureUI();
-    updateMenuSelectionVisual(chosenEngine);
+    updateMenuSelectionVisual(pendingEngine || currentOptions.defaultEngine || 'googleLens');
 
-    const engName = chosenEngine === 'all' ? 'All search engines' : (ALL_ENGINES.find(e => e.id === chosenEngine)?.name || 'Search');
-    showTopStatus(`🔍 <b>${engName}:</b> Click any image on page to search directly (ESC to cancel)`, 8000);
+    const engName = chosenEngine === 'all' ? t('allSearchEngines') : (ALL_ENGINES.find(e => e.id === chosenEngine)?.name || 'Search');
+    showTopStatus(`🔍 <b>${engName}:</b> ${t('clickImageToSearch')}`, 8000);
     document.body.style.cursor = 'crosshair';
 
     // If already in selection mode, listeners are already active! Just refresh hover & return
@@ -1123,8 +1149,6 @@
     if (!isSelectionMode) return;
     isSelectionMode = false;
     currentTarget = null;
-    pendingEngine = null;
-    updateMenuSelectionVisual(currentOptions.defaultEngine || 'googleLens');
 
     if (highlightBox) highlightBox.style.display = 'none';
     if (topBanner) topBanner.style.display = 'none';
@@ -1194,15 +1218,16 @@
     highlightBox.style.height = `${rect.height}px`;
     highlightBox.style.display = 'block';
 
-    let label = '🖼️ Image';
-    if (typeDesc.includes('video')) label = '🎬 Video Frame';
-    else if (typeDesc.includes('bg')) label = '🎨 Background Image';
-    else if (typeDesc.includes('canvas')) label = '🖌️ Canvas';
-    else if (typeDesc.includes('thumb')) label = '⭐ Cover Photo';
+    const isTr = currentOptions.lang === 'tr';
+    let label = isTr ? '🖼️ Görsel' : '🖼️ Image';
+    if (typeDesc.includes('video')) label = isTr ? '🎬 Video Karesi' : '🎬 Video Frame';
+    else if (typeDesc.includes('bg')) label = isTr ? '🎨 Arka Plan Görseli' : '🎨 Background Image';
+    else if (typeDesc.includes('canvas')) label = isTr ? '🖌️ Çizim (Canvas)' : '🖌️ Canvas';
+    else if (typeDesc.includes('thumb')) label = isTr ? '⭐ Kapak Görseli' : '⭐ Cover Photo';
 
     const activeEng = pendingEngine || currentOptions.defaultEngine || 'googleLens';
     const engInfo = ALL_ENGINES.find(e => e.id === activeEng);
-    const engName = activeEng === 'all' ? 'All search engines' : (engInfo?.name || activeEng);
+    const engName = activeEng === 'all' ? t('allSearchEngines') : (engInfo?.name || activeEng);
 
     highlightBadge.textContent = `✓ ${engName} • ${label} (${Math.round(rect.width)} × ${Math.round(rect.height)})`;
   }
@@ -1225,14 +1250,25 @@
 
     // Suppress any trailing site events for 500ms
     suppressPageEventsUntil = Date.now() + 500;
-    stopSelectionMode();
+
+    if (!isMenuVisible) {
+      stopSelectionMode();
+    } else {
+      // Menu is pinned open: keep selection mode continuous and flash green outline on clicked element
+      if (highlightBox) {
+        highlightBox.style.outline = '3px solid #22c55e';
+        setTimeout(() => {
+          if (highlightBox && isSelectionMode) highlightBox.style.outline = '';
+        }, 350);
+      }
+    }
 
     if (!selected) {
-      showTopStatus('⚠️ No valid image element under cursor.', 2000);
+      showTopStatus(`⚠️ ${t('noImageUnderCursor')}`, 2000);
       return;
     }
 
-    showTopStatus('⏳ Extracting image & searching...', 1800);
+    showTopStatus(`⏳ ${t('extractingAndSearching')}`, 1800);
 
     let finalUrl = selected.url;
     let localDataUrl = null;
@@ -1249,7 +1285,7 @@
     }
 
     if (!finalUrl && !localDataUrl) {
-      showTopStatus('⚠️ Failed to extract image data.', 2000);
+      showTopStatus(`⚠️ ${t('failedToExtract')}`, 2000);
       return;
     }
 
@@ -1267,8 +1303,8 @@
     ensureUI();
     updateMenuSelectionVisual(chosenEngine);
 
-    const engName = chosenEngine === 'all' ? 'All engines' : (ALL_ENGINES.find(e => e.id === chosenEngine)?.name || 'Search');
-    showTopStatus(`✂️ <b>${engName} (Capture):</b> Drag a box across the screen to crop (ESC to cancel)`, 10000);
+    const engName = chosenEngine === 'all' ? t('allSearchEngines') : (ALL_ENGINES.find(e => e.id === chosenEngine)?.name || 'Search');
+    showTopStatus(`✂️ <b>${engName}:</b> ${t('modeCaptureStatus')}`, 10000);
     document.body.style.cursor = 'crosshair';
     document.body.style.userSelect = 'none';
 
@@ -1295,8 +1331,6 @@
     if (!isCaptureMode) return;
     isCaptureMode = false;
     isCapturing = false;
-    pendingEngine = null;
-    updateMenuSelectionVisual(currentOptions.defaultEngine || 'googleLens');
 
     if (captureBox) captureBox.style.display = 'none';
     if (topBanner) topBanner.style.display = 'none';
@@ -1390,17 +1424,17 @@
     stopCaptureMode();
 
     if (width < 12 || height < 12) {
-      showTopStatus('⚠️ Area too small, crop cancelled.', 1500);
+      showTopStatus(`⚠️ ${t('areaTooSmall')}`, 1500);
       return;
     }
 
-    showTopStatus('✂️ Cropping and searching...', 3000);
+    showTopStatus(`✂️ ${t('croppingAndSearching')}`, 3000);
     const croppedDataUrl = await cropRegionUnderBox(left, top, width, height);
 
     if (croppedDataUrl) {
       dispatchSearch(targetEngine || 'all', croppedDataUrl, croppedDataUrl);
-      const engName = targetEngine === 'all' ? 'All engines' : (ALL_ENGINES.find(e => e.id === targetEngine)?.name || 'Search');
-      showTopStatus(`✂️ <b>${engName}:</b> Cropped! Searching... <button id="sbi-recrop-btn" style="margin-left: 10px; background: #38bdf8; color: #000; border: none; padding: 3px 12px; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 12px;">✂️ Crop Again</button>`, 7000);
+      const engName = targetEngine === 'all' ? t('allSearchEngines') : (ALL_ENGINES.find(e => e.id === targetEngine)?.name || 'Search');
+      showTopStatus(`✂️ <b>${engName}:</b> ${t('croppedSearching')} <button id="sbi-recrop-btn" style="margin-left: 10px; background: #2563eb; color: #ffffff; border: none; padding: 3px 12px; border-radius: 3px; font-weight: 600; cursor: pointer; font-size: 12px;">${t('recropBtn')}</button>`, 7000);
       setTimeout(() => {
         const btn = shadowRoot?.getElementById('sbi-recrop-btn');
         if (btn) {
@@ -1414,10 +1448,10 @@
       // Fallback: If crop extraction failed on a difficult site element, but an image was under the box:
       const fallbackHit = findBestImageAtPoint(left + width / 2, top + height / 2);
       if (fallbackHit && fallbackHit.url) {
-        showTopStatus('🔍 Cropping fallback: Searching full image...', 2500);
+        showTopStatus(`🔍 ${t('croppingFallback')}`, 2500);
         dispatchSearch(targetEngine || 'all', fallbackHit.url, null);
       } else {
-        showTopStatus('⚠️ Could not crop underlying element.', 2500);
+        showTopStatus(`⚠️ ${t('couldNotCrop')}`, 2500);
       }
     }
   }
@@ -1435,7 +1469,7 @@
       e.stopPropagation();
       e.stopImmediatePropagation();
       stopCaptureMode();
-      showTopStatus('✂️ Capture cancelled.', 1500);
+      showTopStatus(`✂️ ${t('captureCancelled')}`, 1500);
     }
   }
 
@@ -2219,14 +2253,14 @@
     pendingEngine = engineKey;
     updateMenuSelectionVisual(engineKey);
 
-    const engName = engineKey === 'all' ? 'All search engines' : (ALL_ENGINES.find(e => e.id === engineKey)?.name || 'Search');
+    const engName = engineKey === 'all' ? t('allSearchEngines') : (ALL_ENGINES.find(e => e.id === engineKey)?.name || 'Search');
     if (currentMode === 'Capture') {
       startCaptureMode(engineKey);
     } else if (currentMode === 'Select URL') {
-      showTopStatus(`🔍 <b>${engName}:</b> Click any image on page to search directly (ESC to cancel)`, 8000);
+      showTopStatus(`🔍 <b>${engName}:</b> ${t('clickImageToSearch')}`, 8000);
       startSelectionMode(engineKey, 'url');
     } else if (currentMode === 'Select image') {
-      showTopStatus(`🔍 <b>${engName}:</b> Click any image on page to search directly (ESC to cancel)`, 8000);
+      showTopStatus(`🔍 <b>${engName}:</b> ${t('clickImageToSearch')}`, 8000);
       startSelectionMode(engineKey, 'image');
     } else if (currentMode === 'Browse') {
       triggerBrowseFile(engineKey);
@@ -2237,7 +2271,7 @@
         dispatchSearch(engineKey, val, null);
         urlInput.value = '';
       } else {
-        showTopStatus('⚠️ Please enter an Image URL first.', 2000);
+        showTopStatus(`⚠️ ${t('pleaseEnterUrl')}`, 2000);
         if (urlInput) urlInput.focus();
       }
     }
@@ -2259,7 +2293,7 @@
     fileInput.onchange = async (e) => {
       const file = e.target.files[0];
       if (file) {
-        showTopStatus('⏳ Loading local file & searching...', 2000);
+        showTopStatus(`⏳ ${t('loadingFile')}`, 2000);
         const dataUrl = await blobToDataUrl(file);
         dispatchSearch(engineKey, dataUrl, dataUrl);
       }
@@ -2279,7 +2313,7 @@
             if (type.startsWith('image/')) {
               const blob = await item.getType(type);
               const dataUrl = await blobToDataUrl(blob);
-              showTopStatus('✅ Image pasted from clipboard! Searching...', 2000);
+              showTopStatus(`✅ ${t('clipboardImagePasted')}`, 2000);
               dispatchSearch(engineKey, dataUrl, dataUrl);
               return;
             }
@@ -2289,15 +2323,15 @@
       if (navigator.clipboard && navigator.clipboard.readText) {
         const text = await navigator.clipboard.readText();
         if (text && isValidImageUrl(text)) {
-          showTopStatus('✅ Image URL pasted! Searching...', 2000);
+          showTopStatus(`✅ ${t('clipboardUrlPasted')}`, 2000);
           dispatchSearch(engineKey, text.trim(), null);
           return;
         }
       }
-      showTopStatus('⚠️ No image or image link found in clipboard.', 2500);
+      showTopStatus(`⚠️ ${t('clipboardEmpty')}`, 2500);
     } catch (err) {
       console.warn('[Search by Image] Clipboard error:', err);
-      showTopStatus('⚠️ Clipboard permission denied or not supported.', 2500);
+      showTopStatus(`⚠️ ${t('clipboardDenied')}`, 2500);
     }
   }
 
@@ -2443,7 +2477,7 @@
     window.location.hash = '';
     await GM_setValue('sbi_lenso_target', null);
 
-    showPageBadge('⏳ Uploading image to Lenso.ai, please wait...');
+    showPageBadge('⏳ ' + (currentOptions.lang === 'tr' ? 'Görsel Lenso.ai\'ye yükleniyor, lütfen bekleyin...' : 'Uploading image to Lenso.ai, please wait...'));
 
     if (targetUrl.startsWith('data:')) {
       const blob = dataUrlToBlob(targetUrl);
@@ -2827,16 +2861,16 @@
       /* Pinned & Draggable Panel - Modern Premium Wider Design */
         .menu-card {
           position: fixed;
-          top: 20px;
-          right: 20px;
+          top: 24px;
+          right: 24px;
           background: rgba(18, 19, 24, 0.97);
           backdrop-filter: blur(20px) saturate(180%);
           -webkit-backdrop-filter: blur(20px) saturate(180%);
           color: #f4f4f5;
-          width: 248px;
+          width: 325px;
           border-radius: 4px;
           border: 1px solid rgba(255, 255, 255, 0.12);
-          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.08);
+          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.72), 0 0 0 1px rgba(255, 255, 255, 0.08);
           z-index: 2147483647;
           pointer-events: auto;
           display: none;
@@ -2849,31 +2883,31 @@
         to { opacity: 1; transform: translateY(0); }
       }
 
-      /* Compact Draggable Header */
+      /* Comfortable Desktop Header */
       .menu-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 6px 7px 6px 8px;
+        padding: 9px 12px;
         cursor: grab;
         position: relative;
         border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        gap: 6px;
+        gap: 8px;
       }
       .menu-header:active {
         cursor: grabbing;
       }
 
-      /* Mode Selector Pill - Compact, Sharp & Natural */
+      /* Mode Selector Pill - Comfortable & Sharp */
       .menu-title-wrap {
         display: flex;
         align-items: center;
-        gap: 5px;
-        font-size: 12px;
+        gap: 7px;
+        font-size: 13.5px;
         font-weight: 500;
         color: #ececed;
         cursor: pointer;
-        padding: 4px 7px;
+        padding: 6px 11px;
         border-radius: 3px;
         background: #252630;
         border: 1px solid rgba(255, 255, 255, 0.12);
@@ -2893,8 +2927,8 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 14px;
-        height: 14px;
+        width: 16px;
+        height: 16px;
         color: #9ca3af;
         flex-shrink: 0;
         transition: color 0.12s ease;
@@ -2903,8 +2937,8 @@
         color: #d1d5db;
       }
       .menu-title-wrap .mode-trigger-icon svg {
-        width: 14px;
-        height: 14px;
+        width: 16px;
+        height: 16px;
         fill: currentColor;
       }
       .menu-title-wrap .mode-trigger-arrow {
@@ -2919,7 +2953,7 @@
       .menu-actions {
         display: flex;
         align-items: center;
-        gap: 2px;
+        gap: 3px;
       }
       .menu-action-icon {
         background: transparent;
@@ -2929,15 +2963,15 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 22px;
-        height: 22px;
+        width: 28px;
+        height: 28px;
         border-radius: 3px;
         transition: color 0.12s, background 0.12s;
         padding: 0;
       }
       .menu-action-icon svg {
-        width: 12px;
-        height: 12px;
+        width: 15px;
+        height: 15px;
         fill: currentColor;
       }
       .menu-action-icon:hover {
@@ -2948,22 +2982,22 @@
         background: rgba(255, 255, 255, 0.16);
       }
 
-      /* Mode Switcher Dropdown - Compact & Sharp */
+      /* Mode Switcher Dropdown */
       .mode-dropdown {
         position: absolute;
-        top: 36px;
-        left: 6px;
+        top: 46px;
+        left: 10px;
         background: #1e1e24;
         border: 1px solid rgba(255, 255, 255, 0.15);
         border-radius: 4px;
-        padding: 4px;
-        box-shadow: 0 12px 28px rgba(0,0,0,0.75);
+        padding: 5px;
+        box-shadow: 0 16px 36px rgba(0,0,0,0.75);
         z-index: 2147483647;
         display: none;
         flex-direction: column;
         gap: 2px;
-        width: 185px;
-        max-height: 220px;
+        width: 215px;
+        max-height: 250px;
         overflow-y: auto;
       }
       .mode-dropdown::-webkit-scrollbar {
@@ -2974,14 +3008,14 @@
         border-radius: 2px;
       }
       .mode-option {
-        padding: 5px 8px;
+        padding: 7px 10px;
         border-radius: 3px;
-        font-size: 12px;
+        font-size: 13px;
         color: #d4d4d8;
         cursor: pointer;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 9px;
         transition: background 0.1s;
       }
       .mode-option:hover {
@@ -2992,14 +3026,14 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 15px;
-        height: 15px;
+        width: 16px;
+        height: 16px;
         color: #9ca3af;
         flex-shrink: 0;
       }
       .mode-option .mode-icon svg {
-        width: 15px;
-        height: 15px;
+        width: 16px;
+        height: 16px;
       }
       .mode-option:hover .mode-icon {
         color: #ffffff;
@@ -3008,7 +3042,7 @@
       /* URL MODE */
       .url-settings {
         display: none;
-        padding: 8px 10px;
+        padding: 11px 14px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       }
       .url-field-underlined {
@@ -3017,8 +3051,8 @@
         border: none;
         border-bottom: 1px solid #71717a;
         color: #f4f4f5;
-        font-size: 12px;
-        padding: 4px 0 5px 0;
+        font-size: 13.5px;
+        padding: 5px 0 6px 0;
         outline: none;
         transition: border-color 0.15s;
         caret-color: #ffffff;
@@ -3033,14 +3067,14 @@
       /* BROWSE MODE */
       .browse-settings {
         display: none;
-        padding: 8px 10px;
+        padding: 11px 14px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       }
       .browse-buttons {
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
+        gap: 12px;
         width: 100%;
       }
       .browse-pill-btn {
@@ -3049,9 +3083,9 @@
         color: #ececed;
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 3px;
-        font-size: 12px;
+        font-size: 13px;
         font-weight: 500;
-        padding: 5px 10px;
+        padding: 7px 14px;
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -3067,17 +3101,17 @@
         background: #202129;
       }
 
-      /* Engines Menu List - Sleek & Compact */
+      /* Engines Menu List - Comfortable Desktop List */
       .menu-list {
-        padding: 3px 4px 5px 4px;
+        padding: 5px 6px 8px 6px;
         display: flex;
         flex-direction: column;
-        gap: 2px;
-        max-height: 380px;
+        gap: 3px;
+        max-height: 420px;
         overflow-y: auto;
       }
       .menu-list::-webkit-scrollbar {
-        width: 4px;
+        width: 5px;
       }
       .menu-list::-webkit-scrollbar-thumb {
         background: rgba(255,255,255,0.2);
@@ -3088,22 +3122,22 @@
         position: relative;
         display: flex;
         align-items: center;
-        gap: 8px;
-        padding: 5px 7px;
+        gap: 11px;
+        padding: 8px 11px;
         border-radius: 3px;
         cursor: pointer;
         color: #d4d4d8;
-        font-size: 12.5px;
+        font-size: 13.5px;
         font-weight: 450;
         transition: background 0.12s ease, color 0.12s ease;
         user-select: none;
       }
       .menu-item:hover {
-        background: rgba(255, 255, 255, 0.06);
+        background: rgba(255, 255, 255, 0.07);
         color: #ffffff;
       }
       .menu-item:active {
-        background: rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.13);
       }
       .menu-item.selected {
         background: rgba(255, 255, 255, 0.12);
@@ -3121,7 +3155,7 @@
       .menu-item .engine-check {
         margin-left: auto;
         color: #ffffff;
-        font-size: 11px;
+        font-size: 14px;
         font-weight: 600;
         line-height: 1;
         padding-left: 6px;
@@ -3130,13 +3164,13 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 16px;
-        height: 16px;
+        width: 19px;
+        height: 19px;
         flex-shrink: 0;
       }
       .menu-item .icon svg {
-        width: 16px;
-        height: 16px;
+        width: 19px;
+        height: 19px;
       }
       .menu-item .label {
         flex: 1;
@@ -3158,7 +3192,7 @@
       }
       .menu-card.minimized .menu-header {
         border-bottom: none;
-        padding: 5px 8px;
+        padding: 7px 11px;
       }
 
       /* ========================================================
@@ -3675,14 +3709,10 @@
     shadowRoot.getElementById('sbi-btn-browse').addEventListener('click', () => {
       const activeEng = pendingEngine || currentOptions.defaultEngine || 'all';
       triggerBrowseFile(activeEng);
-      pendingEngine = null;
-      updateMenuSelectionVisual(currentOptions.defaultEngine || 'googleLens');
     });
     shadowRoot.getElementById('sbi-btn-paste').addEventListener('click', () => {
       const activeEng = pendingEngine || currentOptions.defaultEngine || 'all';
       triggerClipboardPaste(activeEng);
-      pendingEngine = null;
-      updateMenuSelectionVisual(currentOptions.defaultEngine || 'googleLens');
     });
 
     shadowRoot.getElementById('sbi-btn-crop')?.addEventListener('click', () => {
@@ -3720,8 +3750,6 @@
           const activeEng = pendingEngine || currentOptions.defaultEngine || 'all';
           dispatchSearch(activeEng, val, null);
           urlInput.value = '';
-          pendingEngine = null;
-          updateMenuSelectionVisual(currentOptions.defaultEngine || 'googleLens');
         }
       }
     });
@@ -4229,7 +4257,15 @@
         setTimeout(clampMenuToViewport, 15);
       }
     }
-    updateMenuSelectionVisual(pendingEngine || currentOptions.defaultEngine || 'googleLens');
+    const activeEng = pendingEngine || currentOptions.defaultEngine || 'googleLens';
+    updateMenuSelectionVisual(activeEng);
+
+    // Continuous selection mode while menu is pinned open
+    if (currentMode === 'Select URL') {
+      startSelectionMode(activeEng, 'url');
+    } else if (currentMode === 'Select image') {
+      startSelectionMode(activeEng, 'image');
+    }
   }
 
   function closeMenu() {
@@ -4239,8 +4275,6 @@
     if (modeDropdown) modeDropdown.style.display = 'none';
     stopSelectionMode();
     stopCaptureMode();
-    pendingEngine = null;
-    updateMenuSelectionVisual(currentOptions.defaultEngine || 'googleLens');
   }
 
   // Pre-load user options
