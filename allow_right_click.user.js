@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         ⚡ Allow Right-Click
-// @namespace    https://violentmonkey.github.io/
-// @version      5.1.1
+// @namespace    https://github.com/ioctlG/violentmonkey-scripts
+// @version      5.1.2
 // @description  The ultimate right-click, video, and copy unlocker. Unlocks native HTML5 video context menus (Picture-in-Picture, open in new tab, copy URL), image saving, CSS background images, and text selection across all difficult formats. Toggle with Alt+C. Disabled by default, resets on navigation/F5.
-// @author       Antigravity
+// @author       ioctlG
 // @icon         https://lh3.googleusercontent.com/0fAGMSxhfuwv-vkXRDLE0ntBdluS-doMafSavRHuKL_LrUwBD65T9dRmZn_5o7U0MOpFPU45Msjh_BXTvn0SxuLA=s60
 // @downloadURL  https://github.com/ioctlG/violentmonkey-scripts/raw/refs/heads/main/allow_right_click.user.js
 // @updateURL    https://github.com/ioctlG/violentmonkey-scripts/raw/refs/heads/main/allow_right_click.user.js
