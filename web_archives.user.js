@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Web Archives
 // @namespace    https://github.com/ioctlG/violentmonkey-scripts
-// @version      1.0.2
+// @version      1.0.3
 // @description  Web Archives tool for Violentmonkey — Wayback Machine, Archive.today, Ghostarchive, Megalodon and search engine caches with Shadow DOM floating panel.
 // @author       ioctlG
 // @match        *://*/*
