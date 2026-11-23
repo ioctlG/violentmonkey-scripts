@@ -86,6 +86,21 @@ Modern WebExtensions often run continuous background worker pages that consume 5
 
 ---
 
+### 4. 🕶️ Startpage Anonymous View (`startpage_anonymous_view.user.js`)
+> *One-click privacy proxy gateway to open any website directly through Startpage's Anonymous View proxy.*
+
+[![Install Startpage Anonymous View](https://img.shields.io/badge/⚡%20One--Click%20Install-Startpage%20Anonymous%20View-blueviolet?style=for-the-badge)](https://github.com/ioctlG/violentmonkey-scripts/raw/refs/heads/main/startpage_anonymous_view.user.js)
+
+* **Key Features:**
+  - **Zero Search Engine Exposure:** Automatically masks the search engine behind a sleek, full-screen dark loading curtain while establishing the proxy tunnel in the background.
+  - **Single-Click Execution:** Click `🕶️ Open in Startpage Anonymous View` from the Violentmonkey menu on any site.
+  - **Auto-Trigger & Redirect:** High-frequency observer detects the Anonymous View button instantly and navigates directly into the EU proxy tunnel.
+  - **Zero IP Leakage:** The destination website only sees Startpage's European/Netherlands proxy servers rather than your real home IP.
+  - **🧭 Tünel İçi Arama Çubuğu (Omnibar) & Multi-Tab Container Entegrasyonu:** Sol kenara yapışık, modern cam efekti (glassmorphism) ve SVG ok butonu (`❯`) ile açılan tünel içi arama çekmecesi. Yapılan aramalar ve girilen URL'ler mevcut sayfayı bozmadan **Container mantığıyla yepyeni bir sekmede** Startpage proxy tüneli içinde açılır; açık olan mevcut sayfanız asla kaybolmaz. Violentmonkey `GM_setValue` / `GM_openInTab` çapraz çerçeve motoru sayesinde yazılan sorgular ("merhaba", "selam" vb.) kaybolmadan yeni sekmedeki DuckDuckGo'ya aktarılıp aratılır. Tıklanan tüm web siteleri tünelde kalır ve çekmece arkadaki sayfa elemanlarıyla asla etkileşime girmez (sıfır click-through).
+  - **De-Branded Clean UI:** Automatically purges Startpage's `.av-banner-brand-link` header banner clutter.
+  - **Forced English Localization:** Automatically enforces English interface and search language for Startpage (`&lui=english&language=english`) and DuckDuckGo (`kl=us-en`), with all curtain statuses and UI controls rendered cleanly in English.
+---
+
 ## 🛠️ Installation
 
 ### Step 1: Install a Userscript Manager
@@ -99,6 +114,7 @@ Click any of the **One-Click Install** buttons above, or click the direct links 
 * 📥 [**Install `search_by_image.user.js`**](https://github.com/ioctlG/violentmonkey-scripts/raw/refs/heads/main/search_by_image.user.js)
 * 📥 [**Install `web_archives.user.js`**](https://github.com/ioctlG/violentmonkey-scripts/raw/refs/heads/main/web_archives.user.js)
 * 📥 [**Install `allow_right_click.user.js`**](https://github.com/ioctlG/violentmonkey-scripts/raw/refs/heads/main/allow_right_click.user.js)
+* 📥 [**Install `startpage_anonymous_view.user.js`**](https://github.com/ioctlG/violentmonkey-scripts/raw/refs/heads/main/startpage_anonymous_view.user.js)
 
 ### Step 3: Automatic Updates
 All scripts include `@downloadURL` and `@updateURL` metadata headers pointing to this repository. Violentmonkey will automatically keep your scripts up to date with the latest features and bug fixes.
